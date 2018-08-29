@@ -1,544 +1,269 @@
-(function() {
-	'use strict';
+/* =================================
+------------------------------------
+	Labs - Design Studio
+	Version: 1.0
+ ------------------------------------ 
+ ====================================*/
 
-	/*----------------------------------------
-		Detect Mobile
-	----------------------------------------*/
-	var isMobile = {
-		Android: function() {
-			return navigator.userAgent.match(/Android/i);
-		},
-			BlackBerry: function() {
-			return navigator.userAgent.match(/BlackBerry/i);
-		},
-			iOS: function() {
-			return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-		},
-			Opera: function() {
-			return navigator.userAgent.match(/Opera Mini/i);
-		},
-			Windows: function() {
-			return navigator.userAgent.match(/IEMobile/i);
-		},
-			any: function() {
-			return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
-		}
-	};
+'use strict';
 
-	/*----------------------------------------
-		Back to top
-	----------------------------------------*/
-	var backToTop = function() {
-		$('.js-backtotop').on('click', function(e){
-			e.preventDefault();
-			$('html, body').animate({
-	      scrollTop: $('body').offset().top
-	    }, 700, 'easeInOutExpo');
+/*------------------
+	Preloder
+--------------------*/
+function loader() {
+	$(window).on('load', function() { 
+		$(".loader").fadeOut(); 
+		$("#preloder").delay(400).fadeOut("slow");
+	});
+}
+
+
+
+/*------------------
+	Navigation
+--------------------*/
+function responsive() {
+	// Responsive 
+	$('.responsive').on('click', function(event) {
+		$('.menu-list').slideToggle(400);
+		event.preventDefault();
+	});
+}
+
+
+
+/*------------------
+	Hero Section
+--------------------*/
+function heroSection() {
+	//Slide item bg image.
+	$('.hero-item').each(function() {
+		var image = $(this).data('bg');
+		$(this).css({
+			'background-image'  : 'url(' + image + ')',
+			'background-size'   : 'cover',
+			'background-repeat' : 'no-repeat',
+			'background-position': 'center bottom'
 		});
+	});
+	//slider auto height 
+	var iit = setInterval(slide_item, 1);
+
+	function slide_item() {
+		var bh = $('body').height();
+		$('.hero-item').height(bh);
+	}
+	slide_item();
+
+	var time = 7;
+	var $progressBar,
+		$bar, 
+		$elem, 
+		isPause, 
+		tick,
+		percentTime;
+
+	// Init the carousel
+	$('#hero-slider').owlCarousel({
+		loop: true,
+		nav: true,
+		items: 1,
+		autoHeight:true,
+		animateOut: 'fadeOut',
+		animateIn: 'fadeIn',
+		navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+		onInitialized: progressBar,
+		onTranslated: moved,
+		onDrag: pauseOnDragging
+	});
+
+	// Init progressBar where elem is $("#owl-demo")
+	function progressBar(){    
+		// build progress bar elements
+		buildProgressBar();
+
+		// start counting
+		start();
 	}
 
-	var nextScroll = function() {
-		$('.js-next').on('click', function(e){
-			e.preventDefault();
-			$('html, body').animate({
-      	scrollTop: $( $.attr(this, 'href') ).offset().top
-    	}, 700, 'easeInOutExpo');
+	// create div#progressBar and div#bar then prepend to $("#owl-demo")
+	function buildProgressBar(){
+		$progressBar = $("<div>",{
+			id:"progressBar"
 		});
-
-		$(window).scroll(function(){
-
-			var $this = $(this),
-				st = $this.scrollTop();
-
-			if (st > 10) {
-				$('.js-next').addClass('probootstrap-sleep');
-			} else {
-				$('.js-next').removeClass('probootstrap-sleep');
-			}
-
+		$bar = $("<div>",{
+			id:"bar"
 		});
+		$progressBar.append($bar).prependTo($("#hero-slider"));
 	}
 
-	/*----------------------------------------
-		Burger Menu
-	----------------------------------------*/	
-	var mobileMenuControl = function() {
-		
-
-		// click burger menu
-		$('.probootstrap-burger-menu').on('click', function(e){
-			e.preventDefault();
-			if ($('body').hasClass('show')) {
-				$('.probootstrap-burger-menu').removeClass('active');
-				$('body').removeClass('show');
-			} else {
-				$('.probootstrap-burger-menu').addClass('active');
-				$('body').addClass('show');
-			}
-		});
-
-		if ($(window).width() > 766) {
-			$('body').removeClass('probootstrap-mobile-menu-active');
-			$('.probootstrap-burger-menu').removeClass('active');
-		} else {
-			$('body').addClass('probootstrap-mobile-menu-active');
-		}
-
-		$(window).resize(function(){
-			if ($(window).width() > 766) {
-				$('body').removeClass('probootstrap-mobile-menu-active');
-				$('.probootstrap-burger-menu').removeClass('active');
-			} else {
-				$('body').addClass('probootstrap-mobile-menu-active');
-			}
-		});
-
-		// Click outside of the Mobile Menu content
-		$(document).click(function (e) {
-	    var container = $(".probootstrap-nav, .probootstrap-burger-menu");
-	    
-	    if (!container.is(e.target) && container.has(e.target).length === 0) {
-	      if ( $('body').hasClass('show') ) {
-					$('body').removeClass('show');
-					$('.probootstrap-burger-menu').removeClass('active');
-				}
-	    }
-		});
-		
-
+	function start() {
+		// reset timer
+		percentTime = 0;
+		isPause = false;
+		// run interval every 0.01 second
+		tick = setInterval(interval, 10);
 	};
 
-	/*----------------------------------------
-		Search
-	----------------------------------------*/
-	var searchControl = function() {
-		$('.js-probootstrap-search').on('click', function(){
-			$('#probootstrap-search').addClass('active');
-			setTimeout(function(){
-				$('#probootstrap-search').find('#search').focus().select();
-			}, 500);
-		});
-		$('.js-probootstrap-close').on('click', function(){
-			$('#probootstrap-search').removeClass('active');
-		});
-	};
+	function interval() {
+		if(isPause === false){
+			percentTime += 1 / time;
 
-	/*----------------------------------------
-		Menu Hover
-	----------------------------------------*/
-	var menuHover = function() {
-		if (!isMobile.any()) {
-			$('.probootstrap-navbar .navbar-nav li.dropdown').hover(function() {
-			  $(this).find('> .dropdown-menu').stop(true, true).delay(200).fadeIn(500).addClass('animated-fast fadeInUp');
-			}, function() {
-				$(this).find('> .dropdown-menu').stop(true, true).fadeOut(200).removeClass('animated-fast fadeInUp')
+			$bar.css({
+				width: percentTime+"%"
 			});
+
+			// if percentTime is equal or greater than 100
+			if(percentTime >= 100){
+				// slide to next item 
+				$("#hero-slider").trigger("next.owl.carousel");
+				percentTime = 0; // give the carousel at least the animation time ;)
+			}
 		}
 	}
-	/*----------------------------------------
-		Carousel
-	----------------------------------------*/
-	var owlCarousel = function(){
 
-		var owl1 = $('.owl-carousel-carousel'),
-			 	owl2 = $('.owl-carousel-carousel2'),
-			 	owl3 = $('.owl-carousel-carousel3');
-		owl1.owlCarousel({
-			items: 3,
-			loop: true,
-			margin: 20,
-			nav: false,
-			dots: false,
-			smartSpeed: 800,
-			autoHeight: true,
-			navText: [
-		      "<i class='icon-keyboard_arrow_left owl-direction'></i>",
-		      "<i class='icon-keyboard_arrow_right owl-direction'></i>"
-	     	],
-	     	responsive:{
-	        0:{
-	            items:1
-	        },
-	        400:{
-	            items:1
-	        },
-	        600:{
-	            items:2
-	        },
-	        1000:{
-	            items:3
-	        }
-	    	}
-		});
-
-		owl2.owlCarousel({
-			items: 3,
-			loop: true,
-			margin: 20,
-			nav: false,
-			dots: false,
-			smartSpeed: 800,
-			autoHeight: true,
-			navText: [
-		      "<i class='icon-keyboard_arrow_left owl-direction'></i>",
-		      "<i class='icon-keyboard_arrow_right owl-direction'></i>"
-	     	],
-	     	responsive:{
-	        0:{
-	            items:1
-	        },
-	        400:{
-	            items:1
-	        },
-	        600:{
-	            items:2
-	        },
-	        1000:{
-	            items:3
-	        }
-	    	}
-		});
-
-		owl3.owlCarousel({
-			items: 3,
-			loop: true,
-			margin: 20,
-			nav: false,
-			dots: false,
-			smartSpeed: 800,
-			autoHeight: true,
-			navText: [
-		      "<i class='icon-keyboard_arrow_left owl-direction'></i>",
-		      "<i class='icon-keyboard_arrow_right owl-direction'></i>"
-	     	],
-	     	responsive:{
-	        0:{
-	            items:1
-	        },
-	        400:{
-	            items:1
-	        },
-	        600:{
-	            items:2
-	        },
-	        1000:{
-	            items:3
-	        }
-	    	}
-		});
-
-
-		// Custom Navigation Events
-		$('.probootstrap-owl-next').click(function(e){
-		  owl1.trigger('next.owl.carousel');
-		  e.preventDefault();
-		});
-		$('.probootstrap-owl-prev').click(function(e){
-		  owl1.trigger('prev.owl.carousel');
-		  e.preventDefault();
-		});
-
-		// Custom Navigation Events
-		$('.probootstrap-owl-next2').click(function(e){
-		  owl2.trigger('next.owl.carousel');
-		  e.preventDefault();
-		});
-		$('.probootstrap-owl-prev2').click(function(e){
-		  owl2.trigger('prev.owl.carousel');
-		  e.preventDefault();
-		});
-
-		// Custom Navigation Events
-		$('.probootstrap-owl-next3').click(function(e){
-		  owl3.trigger('next.owl.carousel');
-		  e.preventDefault();
-		});
-		$('.probootstrap-owl-prev3').click(function(e){
-		  owl3.trigger('prev.owl.carousel');
-		  e.preventDefault();
-		});
-
-		var owl = $('.owl-carousel-fullwidth');
-		owl.owlCarousel({
-			loop: true,
-			margin: 20,
-			nav: false,
-			dots: true,
-			smartSpeed: 800,
-			autoHeight: true,
-			autoplay: true,
-			navText: [
-		      "<i class='icon-keyboard_arrow_left owl-direction'></i>",
-		      "<i class='icon-keyboard_arrow_right owl-direction'></i>"
-	    ],
-	    responsive:{
-	    	0:{
-		      items: 1
-			  },
-			  980:{
-		      items: 1
-			  },
-			  1100:{
-		      items: 2
-			  }
-			}
-		});
-
-		var owl = $('.owl-work');
-		owl.owlCarousel({
-			stagePadding: 150,
-			loop: true,
-			margin: 20,
-			nav: true,
-			dots: false,
-			mouseDrag: false,
-			autoWidth: true,
-			autoHeight: true,
-	    autoplay: true,
-	    autoplayTimeout:2000,
-	    autoplayHoverPause:true,
-			navText: [	
-				"<i class='icon-chevron-thin-left'></i>",
-				"<i class='icon-chevron-thin-right'></i>"
-			],
-			responsive:{
-			  0:{
-		      items:1,
-		      stagePadding: 10
-			  },
-			  500:{
-			  	items:2,
-		      stagePadding: 20
-			  },
-			  600:{
-		      items:2,
-		      stagePadding: 40
-			  },
-			  800: {
-			  	items:2,
-			  	stagePadding: 100
-			  },
-			  1100:{
-		      items:3
-			  },
-			  1400:{
-		      items:4
-			  },
-			}
-		});
-	};
-
-	
-	/*----------------------------------------
-		Slider
-	----------------------------------------*/
-	var flexSlider = function() {
-	  $('.flexslider').flexslider({
-	    animation: "fade",
-	    prevText: "",
-	    nextText: "",
-	    slideshow: true
-	  });
+	// pause while dragging 
+	function pauseOnDragging(){
+		isPause = true;
 	}
 
-	
-	/*----------------------------------------
-		Content Animation
-	----------------------------------------*/
-	var contentWayPoint = function() {
-		var i = 0;
-		$('.probootstrap-animate').waypoint( function( direction ) {
+	// moved callback
+	function moved(){
+		// clear interval
+		clearTimeout(tick);
+		// start again
+		start();
+	}
 
-			if( direction === 'down' && !$(this.element).hasClass('probootstrap-animated') ) {
-				
-				i++;
-
-				$(this.element).addClass('item-animate');
-				setTimeout(function(){
-
-					$('body .probootstrap-animate.item-animate').each(function(k){
-						var el = $(this);
-						setTimeout( function () {
-							var effect = el.data('animate-effect');
-							if ( effect === 'fadeIn') {
-								el.addClass('fadeIn probootstrap-animated');
-							} else if ( effect === 'fadeInLeft') {
-								el.addClass('fadeInLeft probootstrap-animated');
-							} else if ( effect === 'fadeInRight') {
-								el.addClass('fadeInRight probootstrap-animated');
-							} else {
-								el.addClass('fadeInUp probootstrap-animated');
-							}
-							el.removeClass('item-animate');
-						},  k * 200, 'easeInOutExpo' );
-					});
-					
-				}, 100);
-				
-			}
-
-		} , { offset: '95%' } );
-	};
-
-	
-
-	/*----------------------------------------
-		Counter Animation
-	----------------------------------------*/
-	var counter = function() {
-		$('.js-counter').countTo({
-			 formatter: function (value, options) {
-	      return value.toFixed(options.decimals);
-	    },
-		});
-	};
-	var counterWayPoint = function() {
-		if ($('#probootstrap-counter').length > 0 ) {
-			$('#probootstrap-counter').waypoint( function( direction ) {
-										
-				if( direction === 'down' && !$(this.element).hasClass('probootstrap-animated') ) {
-					setTimeout( counter , 400);					
-					$(this.element).addClass('probootstrap-animated');
-				}
-			} , { offset: '90%' } );
-		}
-	};
-
-	var magnificPopupControl = function() {
+}
 
 
-		$('.image-popup').magnificPopup({
-			type: 'image',
-			removalDelay: 300,
-			mainClass: 'mfp-with-zoom',
-			gallery:{
-				enabled:true
+
+/*------------------
+	Video Popup
+--------------------*/
+function videoPopup() {
+	$('.video-popup').magnificPopup({
+		type: 'iframe',
+		autoplay : true
+	});
+}
+
+
+
+/*------------------
+	Testimonial
+--------------------*/
+function testimonial() {
+	// testimonial Carousel 
+	$('#testimonial-slide').owlCarousel({
+		loop:true,
+		autoplay:true,
+		margin:30,
+		nav:false,
+		dots: true,
+		responsive:{
+			0:{
+				items:1
 			},
-			zoom: {
-				enabled: true, // By default it's false, so don't forget to enable it
-
-				duration: 300, // duration of the effect, in milliseconds
-				easing: 'ease-in-out', // CSS transition easing function
-
-				// The "opener" function should return the element from which popup will be zoomed in
-				// and to which popup will be scaled down
-				// By defailt it looks for an image tag:
-				opener: function(openerElement) {
-				// openerElement is the element on which popup was initialized, in this case its <a> tag
-				// you don't need to add "opener" option if this code matches your needs, it's defailt one.
-				return openerElement.is('img') ? openerElement : openerElement.find('img');
-				}
-			}
-		});
-
-		$('.with-caption').magnificPopup({
-			type: 'image',
-			closeOnContentClick: true,
-			closeBtnInside: false,
-			mainClass: 'mfp-with-zoom mfp-img-mobile',
-			image: {
-				verticalFit: true,
-				titleSrc: function(item) {
-					return item.el.attr('title') + ' &middot; <a class="image-source-link" href="'+item.el.attr('data-source')+'" target="_blank">image source</a>';
-				}
+			600:{
+				items:2
 			},
-			zoom: {
-				enabled: true
+			800:{
+				items:2
+			},
+			1000:{
+				items:2
 			}
-		});
-
-
-		$('.popup-youtube, .popup-vimeo, .popup-gmaps').magnificPopup({
-      disableOn: 700,
-      type: 'iframe',
-      mainClass: 'mfp-fade',
-      removalDelay: 160,
-      preloader: false,
-
-      fixedContentPos: false
-    });
-	}
-
-	/*----------------------------------------
-		Stellar
-	----------------------------------------*/
-	var stellarInit = function() {
-		if( !isMobile.any() ) {
-			$(window).stellar();
 		}
-	};
+	});
+}
 
 
-	var progressBarControl = function() {
-		if ( $(".progress-bar-s2").length > 0 ) {
-      var $progress_bar = $('.progress-bar-s2');
 
-      $progress_bar.appear();
-      $(document.body).on('appear', '.progress-bar-s2', function() {
-          var current_item = $(this);
-          if (!current_item.hasClass('appeared')) {
-              var percent = current_item.data('percent');
-              current_item.append('<span>' + percent + '%' + '</span>').css('width', percent + '%').addClass('appeared');
-          }
-          
-      });
-    };
-	}
+/*------------------
+	Progress bar
+--------------------*/
+function progressbar() {
 
-	// Loading page
-	var loaderPage = function() {
-		$(".probootstrap-loader").fadeOut("slow");
-	};
+	$('.progress-bar-style').each(function() {
+		var progress = $(this).data("progress");
+		var prog_width = progress + '%';
+		if (progress <= 100) {
+			$(this).append('<div class="bar-inner" style="width:' + prog_width + '"><span>' + prog_width + '</span></div>');
+		}
+		else {
+			$(this).append('<div class="bar-inner" style="width:100%"><span>' + prog_width + '</span></div>');
+		}
+	});
+}
 
-	var goToTop = function() {
 
-		$('.js-gotop').on('click', function(event){
-			
-			event.preventDefault();
 
-			$('html, body').animate({
-				scrollTop: $('html').offset().top
-			}, 500, 'easeInOutExpo');
-			
-			return false;
-		});
+/*------------------
+	Accordions
+--------------------*/
+function accordions() {
+	$('.panel').on('click', function (e) {
+		$('.panel').removeClass('active');
+		var $this = $(this);
+		if (!$this.hasClass('active')) {
+			$this.addClass('active');
+		}
+		e.preventDefault();
+	});
+}
 
-		$(window).scroll(function(){
-			console.log('scrolling');
-			var $win = $(window);
-			if ($win.scrollTop() > 200) {
-				$('.js-top').addClass('active');
-			} else {
-				$('.js-top').removeClass('active');
-			}
 
-		});
-	
-	};
 
-	/*----------------------------------------
-		Document Ready 
-	----------------------------------------*/
-	$(document).ready(function(){
-		menuHover();
-		counterWayPoint();
-		contentWayPoint();
-		backToTop();
-		searchControl();
-		magnificPopupControl();
-		stellarInit();
-		progressBarControl();
-		mobileMenuControl();
-		nextScroll();
-		loaderPage();
-		goToTop();
+/*------------------
+	Progress Circle
+--------------------*/
+function progressCircle() {
+	//Set progress circle 1
+	$("#progress1").circleProgress({
+		value: 0.75,
+		size: 175,
+		thickness: 5,
+		fill: "#2be6ab",
+		emptyFill: "rgba(0, 0, 0, 0)"
+	});
+	//Set progress circle 2
+	$("#progress2").circleProgress({
+		value: 0.83,
+		size: 175,
+		thickness: 5,
+		fill: "#2be6ab",
+		emptyFill: "rgba(0, 0, 0, 0)"
+	});
+	//Set progress circle 3
+	$("#progress3").circleProgress({
+		value: 0.25,
+		size: 175,
+		thickness: 5,
+		fill: "#2be6ab",
+		emptyFill: "rgba(0, 0, 0, 0)"
+	});
+	//Set progress circle 4
+	$("#progress4").circleProgress({
+		value: 0.95,
+		size: 175,
+		thickness: 5,
+		fill: "#2be6ab",
+		emptyFill: "rgba(0, 0, 0, 0)"
 	});
 
-	$(window).load(function(){
-		owlCarousel();
-		flexSlider();
-	});
+}
 
-	
+(function($) {
+	// Call all functions
+	loader();
+	responsive();
+	heroSection();
+	testimonial();
+	progressbar();
+	videoPopup();
+	accordions();
+	progressCircle();
 
-})();
+})(jQuery);
